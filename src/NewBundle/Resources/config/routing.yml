@@ -1,3 +1,0 @@
-new_homepage:
-    path:     /
-    defaults: { _controller: NewBundle:Default:index }
