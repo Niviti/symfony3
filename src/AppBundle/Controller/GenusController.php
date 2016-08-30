@@ -2,6 +2,7 @@
 
 namespace AppBundle\Controller;
 
+use AppBundle\Entity\Genus;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Method;
 use Sensio\Bundle\FrameworkExtraBundle\Configuration\Route;
 use Symfony\Bundle\FrameworkBundle\Controller\Controller;
@@ -22,14 +23,51 @@ use Symfony\Component\HttpFoundation\Response;
 class GenusController extends Controller {
     //put your code here
     
+    
     /**
-     *  @Route("/genus/{genusName}")
+     *  @Route("/genus/new")
+     */
+    public function newAction()
+    {
+               $genus = new Genus();
+               $genus->setName('Octupus' .rand(1, 100));
+               $genus->setSubFamily('Octopodinae');
+               $genus->setSpeciesCount(rand(100, 999999));
+               
+               /**
+                * Ten kod umożliwia nam stworzenie czegoś do bazy 
+                */
+               
+               $em = $this->getDoctrine()->getManager();
+               $em->persist($genus);
+               $em->flush();
+               
+               return new Response('<html><body>Genus Created!</body></html>');
+    }
+    
+    
+    
+    
+    
+    
+    
+    
+    /**
+     *  @Route("/genus/{genusName}", name="genus_show" )
      */
      public function showAction($genusName)
     {
+         $em = $this->getDoctrine()->getManager();
          
-         $funFact = 'Octopuses can change the color of their body in just three-tenths of a second!';
+         $genus = $em->getRepository('AppBundle:Genus')
+              ->findOneBy(['name' => $genusName ]);
          
+         if(!$genus)
+         {
+             throw $this->createNotFoundException('No genus found');
+         }
+       
+         /*
          $cache = $this->get('doctrine_cache.providers.my_markdown_cache');
          
          $key = md5($funFact);
@@ -46,11 +84,10 @@ class GenusController extends Controller {
              
          }
          
-        
+        */
          
          return $this->render('genus/show.html.twig', [ 
-           'name' => $genusName,
-           'funFact' => $funFact 
+          'genus' => $genus
                 
                 ]);
     }
@@ -74,5 +111,25 @@ class GenusController extends Controller {
         return new JsonResponse($data);
         
     }
+    
+    /**
+     * 
+     * @Route("/genus") 
+     */
+    
+    public function listAction()
+    {
+        
+        $em= $this->getDoctrine()->getManager();
+        
+        $genuses = $em->getRepository('AppBundle:Genus')
+                ->findAllpublishedOrderedBySize();
+        
+          return $this->render('genus/list.html.twig', [
+              'genuses' => $genuses, 
+          ]);
+    }
+    
+
     
 }
